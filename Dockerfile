@@ -41,6 +41,11 @@ COPY --from=build /app/node_modules ./node_modules
 COPY package.json ./
 COPY scripts ./scripts
 
+RUN groupadd -r app && useradd -r -g app -d /app -s /usr/sbin/nologin app \
+    && chown -R app:app /app
+
+USER app
+
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
