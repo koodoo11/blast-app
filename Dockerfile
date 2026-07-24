@@ -14,9 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN CI=true pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm run build
+RUN CI=true pnpm run build
 
 # ---- runtime stage ----
 FROM ubuntu:22.04 AS runtime
