@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    image: blast-app:latest
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: file:/app/data/db.sqlite
+      BLAST_DB_PATH: /app/data/blastdb/sequences
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
