@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { BlastHit, BlastResult } from '$lib/blast/types';
+	import AlignmentViewer from '$lib/components/AlignmentViewer.svelte';
 
 	let { result }: { result: BlastResult } = $props();
 
@@ -43,6 +44,60 @@
 
 		return chunks;
 	}
+
+	const CSV_HEADERS = [
+		'accession',
+		'description',
+		'identity',
+		'alignment_length',
+		'mismatches',
+		'gap_opens',
+		'query_start',
+		'query_end',
+		'hit_start',
+		'hit_end',
+		'evalue',
+		'bit_score'
+	];
+
+	function csvEscape(value: string | number): string {
+		const str = String(value);
+		return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+	}
+
+	function hitsToCsv(hits: BlastHit[]): string {
+		const rows = hits.map((hit) =>
+			[
+				hit.accession,
+				hit.description,
+				hit.identity,
+				hit.alignmentLength,
+				hit.mismatches,
+				hit.gapOpens,
+				hit.queryStart,
+				hit.queryEnd,
+				hit.hitStart,
+				hit.hitEnd,
+				hit.evalue,
+				hit.bitScore
+			]
+				.map(csvEscape)
+				.join(',')
+		);
+		return [CSV_HEADERS.join(','), ...rows].join('\n');
+	}
+
+	function downloadCsv() {
+		const csv = hitsToCsv(result.hits);
+		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+		link.href = url;
+		link.download = `blast_${result.program}_${timestamp}.csv`;
+		link.click();
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <div>
@@ -67,9 +122,24 @@
 		</button>
 	</div>
 
-	<p class="mt-2 text-xs text-gray-500">
-		프로그램: {result.program} · 히트 {result.hits.length}개
-	</p>
+	<div class="mt-2 flex items-center justify-between">
+		<p class="text-xs text-gray-500">
+			프로그램: {result.program} · 히트 {result.hits.length}개
+		</p>
+		{#if result.hits.length > 0}
+			<button
+				type="button"
+				onclick={downloadCsv}
+				class="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+			>
+				CSV 다운로드
+			</button>
+		{/if}
+	</div>
+
+	<div class="mt-3">
+		<AlignmentViewer {result} />
+	</div>
 
 	{#if result.hits.length === 0}
 		<p class="mt-4 text-sm text-gray-600">일치하는 서열이 없습니다.</p>

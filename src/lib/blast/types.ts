@@ -23,6 +23,7 @@ export interface BlastHit {
 
 export interface BlastResult {
 	program: BlastProgram;
+	queryLength: number;
 	hits: BlastHit[];
 }
 

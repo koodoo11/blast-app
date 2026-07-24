@@ -82,7 +82,8 @@ export async function runBlast(
 			'10'
 		]);
 
-		return { program, hits: parseBlastJson(stdout) };
+		const { queryLength, hits } = parseBlastJson(stdout);
+		return { program, queryLength, hits };
 	} catch (err) {
 		if (err instanceof BlastError) throw err;
 		const message = err instanceof Error ? err.message : String(err);
@@ -92,7 +93,7 @@ export async function runBlast(
 	}
 }
 
-function parseBlastJson(stdout: string): BlastHit[] {
+function parseBlastJson(stdout: string): { queryLength: number; hits: BlastHit[] } {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(stdout);
@@ -101,9 +102,10 @@ function parseBlastJson(stdout: string): BlastHit[] {
 	}
 
 	const search = (parsed as any)?.BlastOutput2?.[0]?.report?.results?.search;
+	const queryLength = search?.query_len ?? 0;
 	const hits = search?.hits ?? [];
 
-	return hits.map((hit: any) => {
+	const parsedHits = hits.map((hit: any) => {
 		const hsp = hit.hsps[0];
 		return {
 			id: hit.description?.[0]?.id ?? '',
@@ -124,4 +126,6 @@ function parseBlastJson(stdout: string): BlastHit[] {
 			midline: hsp.midline ?? ''
 		} satisfies BlastHit;
 	});
+
+	return { queryLength, hits: parsedHits };
 }
