@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import {
@@ -7,6 +8,7 @@ import {
 	BLAST_PROGRAMS,
 	type BlastProgram
 } from '$lib/server/blast';
+import { insertJob } from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;
@@ -39,7 +41,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	try {
 		const result = await runBlast(sequence, requestedProgram);
-		return json(result);
+		const jobId = randomUUID();
+		insertJob({ id: jobId, sequence, program: result.program, result });
+		return json({ jobId, ...result });
 	} catch (err) {
 		if (err instanceof BlastError) {
 			error(400, err.message);

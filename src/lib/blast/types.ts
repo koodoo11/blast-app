@@ -25,3 +25,23 @@ export interface BlastResult {
 	program: BlastProgram;
 	hits: BlastHit[];
 }
+
+export interface BlastRunResponse extends BlastResult {
+	jobId: string;
+}
+
+export interface BlastJob {
+	id: string;
+	sequence: string;
+	program: BlastProgram;
+	result: BlastResult;
+	createdAt: string;
+}
+
+export interface BlastJobSummary {
+	id: string;
+	program: BlastProgram;
+	sequencePreview: string;
+	hitCount: number;
+	createdAt: string;
+}
